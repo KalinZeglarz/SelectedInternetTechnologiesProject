@@ -5,34 +5,33 @@ from PreselectionServer import PreselectionServer
 
 
 class StoresUpdater:
-    def __init__(self, rowsn, cassandraHost, cassandraPort, elasticsearchHost, elasticsearchPort):
-
+    def __init__(self, cassandraHost, cassandraPort, elasticsearchHost, elasticsearchPort):
         self.dfData: pd.DataFrame
         self.dict_list: list
         self.cassandraClient = ProfileStore(cassandraHost, cassandraPort)
+        self.cassandraClient.clear_table()
         self.es = PreselectionServer(elasticsearchHost + ":" + elasticsearchPort)
 
         if len(self.cassandraClient.get_data_table()) == 0:
             print("Cassandra empty")
-            self.dfData = self.load_data_from_files(rowsn)
+            self.dfData = self.load_data_from_files()
             self.push_to_cassandra()
+            self.es.index_documents(self.dfData)
             self.dict_list = self.dfData.to_dict(orient='records')
         else:
-            self.DFData = dict_list_to_df(self.cassandraClient.get_data_table())
+            self.dfData = dict_list_to_df(self.cassandraClient.get_data_table())
+            self.es.index_documents(self.dfData)
             self.dict_list = self.cassandraClient.get_data_table()
 
     # ------ Interior functions ------
-
     def df_to_dict_list(self):
         return self.dict_list
 
-    def load_data_from_files(self, rowsn):
-        dfUsr = pd.read_csv("./user_ratedmovies.dat", header=0, delimiter="\t", usecols=['userID', 'movieID', 'rating'],
-                            nrows=rowsn)
-
-        self.es.index_documents(dfUsr)
-
-        dfMov = pd.read_csv("./movie_genres.dat", header=0, delimiter="\t")
+    def load_data_from_files(self):
+        dfUsr = pd.read_csv("C:\\GitHub\\SelectedInternetTechnologiesProject\\data\\user_ratedmovies.dat", header=0,
+                            delimiter="\t", usecols=['userID', 'movieID', 'rating'], nrows=1000)
+        dfMov = pd.read_csv("C:\\GitHub\\SelectedInternetTechnologiesProject\\data\\movie_genres.dat",
+                            header=0, delimiter="\t")
 
         dfMov['dummyColumn'] = 1
         dfMovPivoted = dfMov.pivot_table(index="movieID", columns="genre", values="dummyColumn")
@@ -58,7 +57,6 @@ class StoresUpdater:
                                                  float(jsoned["Western"]))
 
     # ------ Get/Add/Update ------
-
     def get(self, user_id, movie_id):
         dfRow = self.dfData.loc[(self.dfData['userID'] == user_id) & (self.dfData['movieID'] == movie_id)]
         jsonRow = data_to_json(dfRow)
@@ -78,8 +76,11 @@ class StoresUpdater:
         return jsonData
 
     def append_row(self, newRow):
-        if not self.dfData.loc[(self.dfData['userID'] == newRow['userID'])]:
-            self.es.add_user_document(newRow['userID'], [newRow['movieID']], 'users', 'movies')
+        user_id = int(newRow['userID'])
+        movie_id = int(newRow['movieID'])
+        movies = [movie_id]
+        if (self.dfData.loc[(self.dfData['userID'] == newRow['userID'])]).empty:
+            self.es.add_user_document(user_id, movies, 'users', 'movies')
         else:
             self.es.update_user_document(newRow['userID'], [newRow['movieID']], 'users', 'movies')
         self.dfData = self.dfData.append(newRow, ignore_index=True)
@@ -106,14 +107,6 @@ def dict_list_to_df(dict_list):
 
 
 if __name__ == "__main__":
-    ec = PreselectionServer('localhost:1000')
-    ec.index_documents()
+    su = StoresUpdater('localhost', '9042', 'localhost', '9200')
+    print(su.get(75, 3))
 
-    # ------ Index operations ------
-    print()
-
-    ec.reindex('users', 'test')
-    ec.delete_index('test123')
-    print(ec.get_all_index())
-    ec.add_index('test123')
-    print(ec.get_all_index())

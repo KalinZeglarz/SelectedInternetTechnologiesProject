@@ -1,10 +1,11 @@
 import json
+import sys
 
 from flask import Flask, jsonify, abort, request, Response
 from StoresUpdater import StoresUpdater
 
 app = Flask(__name__)
-su = StoresUpdater(20, 'localhost', '9042', 'localhost', '1000')
+su = StoresUpdater('localhost', '9042', 'localhost', '9200')
 
 
 @app.route('/rating/<int:user_id>/<int:movie_id>', methods=['GET'])
@@ -49,7 +50,7 @@ def get_all_index():
 
 
 @app.route('/rating', methods=['POST'])
-def add_row(user_id):
+def add_row():
     newRow = request.get_json()
     su.append_row(newRow)
     return Response(status=201, mimetype='application/json')
@@ -83,6 +84,7 @@ def movies_preselection(id):
 
 
 if __name__ == '__main__':
+    print(sys.path)
     app.run(
         host='127.0.0.1',
         port=9875
