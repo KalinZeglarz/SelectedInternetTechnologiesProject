@@ -115,32 +115,32 @@ class ProfileStore:
         self.lastindex = 0
 
 
-if __name__ == "__main__":
-    cassandraClient = ProfileStore('127.0.0.1', '9042')
-    dict = {
-        "userID": 73,
-        "movieID": 1,
-        "rating": 6,
-        "Action": 1,
-        "Adventure": 1,
-        "Animation": 0,
-        "Children": 1,
-        "Comedy": 1,
-        "Crime": 0,
-        "Documentary": 0,
-        "Drama": 0,
-        "Fantasy": 0,
-        "Film-Noir": 0,
-        "Horror": 0,
-        "IMAX": 0,
-        "Musical": 0,
-        "Mystery": 0,
-        "Romance": 1,
-        "Sci-Fi": 0,
-        "Short": 0,
-        "Thriller": 0,
-        "War": 0,
-        "Western": 0,
-    }
-    cassandraClient.push_data_table(dict)
-    cassandraClient.get_data_table()
+# if __name__ == "__main__":
+#     cassandraClient = ProfileStore('127.0.0.1', '9042')
+#     dict = {
+#         "userID": 73,
+#         "movieID": 1,
+#         "rating": 6,
+#         "Action": 1,
+#         "Adventure": 1,
+#         "Animation": 0,
+#         "Children": 1,
+#         "Comedy": 1,
+#         "Crime": 0,
+#         "Documentary": 0,
+#         "Drama": 0,
+#         "Fantasy": 0,
+#         "Film-Noir": 0,
+#         "Horror": 0,
+#         "IMAX": 0,
+#         "Musical": 0,
+#         "Mystery": 0,
+#         "Romance": 1,
+#         "Sci-Fi": 0,
+#         "Short": 0,
+#         "Thriller": 0,
+#         "War": 0,
+#         "Western": 0,
+#     }
+#     cassandraClient.push_data_table(dict)
+#     cassandraClient.get_data_table()

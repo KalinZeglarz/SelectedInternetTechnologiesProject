@@ -63,10 +63,10 @@ class StoresUpdater:
         return jsonRow
 
     def user_likes(self, user_id, index):
-        self.es.get_movies_liked_by_user(user_id, index)
+        return self.es.get_movies_liked_by_user(user_id, index)
 
     def movie_likes(self, movie_id, index):
-        self.es.get_users_that_like_movie(movie_id, index)
+        return self.es.get_users_that_like_movie(movie_id, index)
 
     def get_indexes(self):
         return self.es.get_all_index()
@@ -82,17 +82,18 @@ class StoresUpdater:
         if (self.dfData.loc[(self.dfData['userID'] == newRow['userID'])]).empty:
             self.es.add_user_document(user_id, movies, 'users', 'movies')
         else:
-            self.es.update_user_document(newRow['userID'], [newRow['movieID']], 'users', 'movies')
+            movies = movies + self.user_likes(user_id, 'users')['ratings']
+            self.es.update_user_document(user_id, movies, 'users', 'movies')
         self.dfData = self.dfData.append(newRow, ignore_index=True)
         self.push_to_cassandra()
         self.dict_list = self.cassandraClient.get_data_table()
 
     # ------ Preselection ------
     def movie_preselection(self, user_id, index):
-        self.es.get_movie_recommendations(user_id, index)
+        return self.es.get_movie_recommendations(user_id, index)
 
     def user_preselection(self, movie_id, index):
-        self.es.get_user_recommendations(movie_id, index)
+        return self.es.get_user_recommendations(movie_id, index)
 
 
 def data_to_json(data):
@@ -106,7 +107,32 @@ def dict_list_to_df(dict_list):
     return pd.DataFrame.from_dict(dict_list, orient="columns")
 
 
-if __name__ == "__main__":
-    su = StoresUpdater('localhost', '9042', 'localhost', '9200')
-    print(su.get(75, 3))
+# if __name__ == "__main__":
+#     su = StoresUpdater('localhost', '9042', 'localhost', '9200')
+#     newRow = {
+#       "userID": 75.0,
+#       "movieID": 2.0,
+#       "rating": 1.0,
+#       "Action": 0.0,
+#       "Adventure": 0.0,
+#       "Animation": 0.0,
+#       "Children": 0.0,
+#       "Comedy": 1.0,
+#       "Crime": 0.0,
+#       "Documentary": 0.0,
+#       "Drama": 0.0,
+#       "Fantasy": 0.0,
+#       "Film-Noir": 0.0,
+#       "Horror": 0.0,
+#       "IMAX": 0.0,
+#       "Musical": 0.0,
+#       "Mystery": 0.0,
+#       "Romance": 1.0,
+#       "Sci-Fi": 0.0,
+#       "Short": 0.0,
+#       "Thriller": 0.0,
+#       "War": 0.0,
+#       "Western": 0.0
+#    }
+#     su.append_row(newRow)
 

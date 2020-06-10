@@ -53,7 +53,8 @@ class PreselectionServer:
 
     def get_movies_liked_by_user(self, user_id, index='users'):
         user_id = int(user_id)
-        return self.es.get(index=index, doc_type="user", id=user_id)["_source"]
+        result = self.es.get(index=index, doc_type="user", id=user_id)["_source"]
+        return result
 
     def get_users_that_like_movie(self, movie_id, index='movies'):
         movie_id = int(movie_id)
@@ -266,17 +267,3 @@ class PreselectionServer:
 
     def get_all_index(self):
         return self.es.indices.get_alias("*")
-
-
-if __name__ == "__main__":
-    ec = PreselectionServer('localhost:1000')
-    ec.index_documents()
-
-    # ------ Index operations ------
-    print()
-
-    ec.reindex('users', 'test')
-    ec.delete_index('test123')
-    print(ec.get_all_index())
-    ec.add_index('test123')
-    print(ec.get_all_index())

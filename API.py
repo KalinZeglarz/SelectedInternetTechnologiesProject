@@ -1,7 +1,7 @@
 import json
 import sys
 
-from flask import Flask, jsonify, abort, request, Response
+from flask import Flask, request, Response
 from StoresUpdater import StoresUpdater
 
 app = Flask(__name__)
@@ -14,7 +14,7 @@ def get(user_id, movie_id):
         jsonRow = su.get(user_id, movie_id)
         return Response(response=json.dumps(jsonRow, indent=3), status=200, mimetype='application/json')
     except:
-        abort(404)
+        Response(status=404)
 
 
 @app.route("/user/document/<id>", methods=["GET"])
@@ -22,9 +22,9 @@ def get_user_likes(id):
     try:
         index = request.args.get('index', default='users')
         result = su.user_likes(id, index)
-        return jsonify(result)
+        return Response(response=json.dumps(result), status=200, mimetype='application/json')
     except:
-        abort(404)
+        Response(status=404)
 
 
 @app.route("/movie/document/<id>", methods=["GET"])
@@ -32,9 +32,9 @@ def get_movie_likes(id):
     try:
         index = request.args.get('index', default='movies')
         result = su.movie_likes(id, index)
-        return jsonify(result)
+        return Response(response=json.dumps(result), status=200, mimetype='application/json')
     except:
-        abort(404)
+        Response(status=404)
 
 
 @app.route("/index/all", methods=["GET"])
@@ -44,16 +44,16 @@ def get_all_index():
         result = {
             "indexFound": result
         }
-        return jsonify(result)
+        return Response(response=json.dumps(result), status=200, mimetype='application/json')
     except:
-        abort(404)
+        Response(status=404)
 
 
 @app.route('/rating', methods=['POST'])
 def add_row():
     newRow = request.get_json()
     su.append_row(newRow)
-    return Response(status=201, mimetype='application/json')
+    return Response(response="Ok", status=201, mimetype='application/json')
 
 
 # ------ Preselection ------
@@ -65,9 +65,9 @@ def use_preselection(id):
         result = {
             "moviesFound": result
         }
-        return jsonify(result)
+        return Response(response=json.dumps(result), status=200, mimetype='application/json')
     except:
-        abort(404)
+        Response(status=404)
 
 
 @app.route("/movie/preselection/<id>", methods=["GET"])
@@ -78,9 +78,9 @@ def movies_preselection(id):
         result = {
             "usersFound": result
         }
-        return jsonify(result)
+        return Response(response=json.dumps(result), status=200, mimetype='application/json')
     except:
-        abort(404)
+        Response(status=404)
 
 
 if __name__ == '__main__':
