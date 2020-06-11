@@ -1,12 +1,14 @@
 # SelectedInternetTechnologiesProject
 Poznan University of Technology Studies project of microservice for movie ratings and preselections
 
+You can use API_client.py to test endpoints
+
 ### Docker
 - Cassandra - `sudo docker run -it --link main_cass:cassandra --rm cassandra:3 cqlsh cassandra`
 - Elasticsearch - `sudo docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.6.2`
 
 ### Endpoints
-- `POST` `/rating`                                    - add rating to database (eg. of body below)
+- `POST` `/rating`                                    - add rating to database (e.g. of body below)
 - `GET` `/rating/<int:user_id>/<int:movie_id>`        - single rating (userID, movieID, rating, [genres of movie])
 - `GET` `/user/document/<id>`                         - all movies rated by user
 - `GET` `/movie/document/<id>`                        - all users that rated movie
@@ -15,7 +17,7 @@ Poznan University of Technology Studies project of microservice for movie rating
 - `GET` `/movie/preselection/<id>`                    - users preselected for movie
 - `GET` `/generator`                                  - generates random rating and adds it to database
 
-### POST body eg.
+### POST body e.g.
 ```
 {
       "userID": 75.0,
