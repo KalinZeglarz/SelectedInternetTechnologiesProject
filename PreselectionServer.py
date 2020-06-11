@@ -123,29 +123,6 @@ class PreselectionServer:
         },
                        doc_type='user')
 
-    def add_movie_document(self, movie_id, users, user_index='users', movie_index='movies'):
-        movie_id = int(movie_id)
-        users = list(set(users))
-        to_update = [self.es.get(index=user_index, id=user_id, doc_type='user') for user_id in users]
-
-        if len(to_update) != len(users):
-            raise Exception("One or more users unknown")
-
-        for user_document in to_update:
-            movies = user_document["_source"]["ratings"]
-            movies.append(movie_id)
-            movies = list(set(movies))
-            self.es.update(index=user_index, id=user_document["_id"], doc_type='user', body={
-                "doc": {
-                    "ratings": movies
-                }
-            })
-
-        self.es.create(index=movie_index, id=movie_id, body={
-            "whoRated": users
-        },
-                       doc_type='movie')
-
     def update_user_document(self, user_id, movies, user_index='users', movie_index='movies'):
         user_id = int(user_id)
 
@@ -176,94 +153,6 @@ class PreselectionServer:
 
         self.es.update(index=user_index, id=user_id,
                        body={"doc": {"ratings": movies}}, doc_type="user")
-
-    def update_movie_document(self, movie_id, users, user_index='users', movie_index='movies'):
-        movie_id = int(movie_id)
-
-        users = list(set(users))
-        to_update = self.es.get(index=movie_index, id=movie_id, doc_type='movie')
-        old_users = to_update['_source']['whoRated']
-
-        users_to_add_movie = np.setdiff1d(users, old_users)
-        users_to_remove_movie = np.setdiff1d(old_users, users)
-
-        for user_to_remove_movie in users_to_remove_movie:
-            user_document = self.es.get(index=user_index, id=user_to_remove_movie, doc_type='user')
-            movies_liked_by_user = user_document["_source"]["ratings"]
-            movies_liked_by_user.remove(movie_id)
-            movies_liked_by_user = list(set(movies_liked_by_user))
-            self.es.update(index=user_index,
-                           id=user_to_remove_movie, doc_type='user',
-                           body={"doc": {"ratings": movies_liked_by_user}})
-
-        for user_to_remove_movie in users_to_add_movie:
-            user_document = self.es.get(index=user_index, id=user_to_remove_movie, doc_type='user')
-            movies_liked_by_user = user_document["_source"]["ratings"]
-            movies_liked_by_user.append(movie_id)
-            movies_liked_by_user = list(set(movies_liked_by_user))
-            self.es.update(index=user_index,
-                           id=user_to_remove_movie, doc_type='user',
-                           body={"doc": {"ratings": movies_liked_by_user}})
-
-        self.es.update(index=movie_index, id=movie_id,
-                       body={"doc": {"whoRated": users}}, doc_type="movie")
-
-    def delete_user_document(self, user_id, user_index="users", movie_index="movies"):
-        user_id = int(user_id)
-
-        to_delete = self.es.get(index=user_index, id=user_id, doc_type='user')["_source"]["ratings"]
-
-        for movie_id_to_update in to_delete:
-            movie_document = self.es.get(index=movie_index, id=movie_id_to_update, doc_type='movie')
-            users_who_liked_movie = movie_document["_source"]["whoRated"]
-            users_who_liked_movie.remove(user_id)
-            users_who_liked_movie = list(set(users_who_liked_movie))
-            self.es.update(index=movie_index,
-                           id=movie_id_to_update, doc_type='movie',
-                           body={"doc": {"whoRated": users_who_liked_movie}})
-
-        self.es.delete(index=user_index, id=user_id, doc_type="user")
-
-    def delete_movie_document(self, movie_id, user_index="users", movie_index="movies"):
-        movie_id = int(movie_id)
-
-        to_delete = self.es.get(index=movie_index, id=movie_id, doc_type='movie')["_source"]["whoRated"]
-
-        for user_id_to_update in to_delete:
-            user_document = self.es.get(index=user_index, id=user_id_to_update, doc_type='user')
-            movies_liked_by_user = user_document["_source"]["ratings"]
-            movies_liked_by_user.remove(movie_id)
-            movies_liked_by_user = list(set(movies_liked_by_user))
-            self.es.update(index=user_index,
-                           id=user_id_to_update, doc_type='user',
-                           body={"doc": {"ratings": movies_liked_by_user}})
-
-        self.es.delete(index=movie_index, id=movie_id, doc_type="movie")
-
-    def bulk_user_update(self, data, user_index='users', movie_index='movies'):
-        for item in data:
-            self.update_user_document(item["user_id"],
-                                      item["liked_movies"], user_index=user_index, movie_index=movie_index)
-
-    def bulk_movie_update(self, data, user_index='users', movie_index='movies'):
-        for item in data:
-            self.update_movie_document(item["movie_id"],
-                                       item["users_who_liked_movie"], user_index=user_index, movie_index=movie_index)
-
-    def reindex(self, source_index, target_index):
-        helpers.reindex(self.es, source_index, target_index)
-
-    def delete_index(self, index):
-        self.es.indices.delete(index=index, ignore=[400, 404])
-
-    def add_index(self, index):
-        request_body = {
-            "settings": {
-                "number_of_shards": 5,
-                "number_of_replicas": 1
-            }
-        }
-        self.es.indices.create(index=index, body=request_body)
 
     def get_all_index(self):
         return self.es.indices.get_alias("*")

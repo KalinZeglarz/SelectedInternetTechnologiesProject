@@ -1,7 +1,10 @@
 import json
 import sys
+from time import sleep
 
 from flask import Flask, request, Response
+
+from Simulator import Simulator
 from StoresUpdater import StoresUpdater
 
 app = Flask(__name__)
@@ -83,9 +86,21 @@ def movies_preselection(id):
         Response(status=404)
 
 
+@app.route("/generator", methods=["GET"])
+def generate():
+    try:
+        result = su.generate_random_rating()
+        return Response(response=json.dumps(result, indent=3), status=200, mimetype='application/json')
+    except:
+        Response(status=404)
+
+
 if __name__ == '__main__':
     print(sys.path)
     app.run(
         host='127.0.0.1',
         port=9875
     )
+    while True:
+        su.generate_random_rating()
+        sleep(15)

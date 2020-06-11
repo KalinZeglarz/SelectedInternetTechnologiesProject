@@ -1,7 +1,9 @@
 import json
+
 import pandas as pd
 from ProfileStore import ProfileStore
 from PreselectionServer import PreselectionServer
+from Simulator import Simulator
 
 
 class StoresUpdater:
@@ -9,7 +11,8 @@ class StoresUpdater:
         self.dfData: pd.DataFrame
         self.dict_list: list
         self.cassandraClient = ProfileStore(cassandraHost, cassandraPort)
-        self.cassandraClient.clear_table()
+        self.sim = Simulator()
+        #self.cassandraClient.clear_table()
         self.es = PreselectionServer(elasticsearchHost + ":" + elasticsearchPort)
 
         if len(self.cassandraClient.get_data_table()) == 0:
@@ -22,6 +25,13 @@ class StoresUpdater:
             self.dfData = dict_list_to_df(self.cassandraClient.get_data_table())
             self.es.index_documents(self.dfData)
             self.dict_list = self.cassandraClient.get_data_table()
+
+    # ------ Random rating generation ------
+    def generate_random_rating(self):
+        movies = self.cassandraClient.get_unique_movies()
+        generated = self.sim.generate_random_user_rating(movies)
+        self.append_row(generated)
+        return generated
 
     # ------ Interior functions ------
     def df_to_dict_list(self):
@@ -105,34 +115,4 @@ def data_to_json(data):
 
 def dict_list_to_df(dict_list):
     return pd.DataFrame.from_dict(dict_list, orient="columns")
-
-
-# if __name__ == "__main__":
-#     su = StoresUpdater('localhost', '9042', 'localhost', '9200')
-#     newRow = {
-#       "userID": 75.0,
-#       "movieID": 2.0,
-#       "rating": 1.0,
-#       "Action": 0.0,
-#       "Adventure": 0.0,
-#       "Animation": 0.0,
-#       "Children": 0.0,
-#       "Comedy": 1.0,
-#       "Crime": 0.0,
-#       "Documentary": 0.0,
-#       "Drama": 0.0,
-#       "Fantasy": 0.0,
-#       "Film-Noir": 0.0,
-#       "Horror": 0.0,
-#       "IMAX": 0.0,
-#       "Musical": 0.0,
-#       "Mystery": 0.0,
-#       "Romance": 1.0,
-#       "Sci-Fi": 0.0,
-#       "Short": 0.0,
-#       "Thriller": 0.0,
-#       "War": 0.0,
-#       "Western": 0.0
-#    }
-#     su.append_row(newRow)
 
