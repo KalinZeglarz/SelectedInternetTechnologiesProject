@@ -8,7 +8,7 @@ You can use API_client.py to test endpoints
 - Elasticsearch - `sudo docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.6.2`
 
 ### Endpoints
-- `POST` `/rating`                                    - add rating to database (e.g. of body below)
+- `POST` `/rating`                                    - add rating to database (ex. of body below)
 - `GET` `/rating/<int:user_id>/<int:movie_id>`        - single rating (userID, movieID, rating, [genres of movie])
 - `GET` `/user/document/<id>`                         - all movies rated by user
 - `GET` `/movie/document/<id>`                        - all users that rated movie
@@ -17,7 +17,7 @@ You can use API_client.py to test endpoints
 - `GET` `/movie/preselection/<id>`                    - users preselected for movie
 - `GET` `/generator`                                  - generates random rating and adds it to database
 
-### POST body e.g.
+### POST body ex.
 ```
 {
       "userID": 75.0,
